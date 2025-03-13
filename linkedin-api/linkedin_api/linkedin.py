@@ -1812,3 +1812,48 @@ class Linkedin(object):
             return {}
 
         return data
+        
+def search_company_posts_and_bio(self, company_id):
+    """
+    Retrieve the profile and posts for a given company ID using LinkedIn's unofficial API.
+
+    Args:
+        company_id (str): The LinkedIn company ID (e.g., '1035' for a specific company).
+
+    Returns:
+        dict: A dictionary containing:
+            - 'profile': A dictionary with company details (name, description, industry, location).
+            - 'posts': A list of post texts from the company's updates.
+        None: If an error occurs during the request or parsing.
+
+    Raises:
+        Exception: Handles network errors, invalid responses, or endpoint issues.
+    """
+    try:
+        # Fetch company profile data
+        profile_endpoint = f"/voyager/api/organization/companies/{company_id}"
+        profile_response = self._fetch(profile_endpoint)
+        profile_data = profile_response.json()
+
+        # Fetch company posts (updates), limiting to 10 posts
+        posts_endpoint = f"/voyager/api/organization/companies/{company_id}/updates?count=10"
+        posts_response = self._fetch(posts_endpoint)
+        posts_data = posts_response.json().get('elements', [])
+
+        # Extract relevant profile information
+        profile = {
+            'name': profile_data.get('name', 'N/A'),
+            'description': profile_data.get('description', 'N/A'),
+            'industry': profile_data.get('industry', 'N/A'),
+            'location': profile_data.get('location', 'N/A'),
+        }
+
+        # Extract post texts from updates
+        posts = [post.get('text', 'No text') for post in posts_data if 'text' in post]
+
+        # Return combined data
+        return {'profile': profile, 'posts': posts}
+
+    except Exception as e:
+        print(f"Error fetching data for company ID {company_id}: {e}")
+        return None
