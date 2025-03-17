@@ -1856,4 +1856,48 @@ class Linkedin(object):
         except Exception as e:
             print(f"Error fetching data for company ID {company_id}: {e}")
             return None
+    
+    def search_peoples(self, keywords: str, limit: int = 10) -> List[Dict]:
+        """
+        Perform a LinkedIn search for people using only keywords.
+
+        :param keywords: Keywords to search on (e.g., "software engineer")
+        :type keywords: str
+        :param limit: Maximum number of results to return, defaults to 10
+        :type limit: int, optional
+
+        :return: List of profiles with minimal details
+        :rtype: list
+        """
+        # Define base filters
+        filters = ["(key:resultType,value:List(PEOPLE))"]
+
+        # Add keywords to the search parameters
+        params = {
+            "filters": "List({})".format(",".join(filters)),
+            "keywords": keywords,
+            "limit": limit,
+        }
+
+        # Perform the search
+        data = self.api_client.search(params)
+
+        # Process the results
+        results = []
+        for item in data:
+            results.append(
+                {
+                    "urn_id": self._get_urn_id(item),
+                    "name": self._get_name(item),
+                    "jobtitle": self._get_jobtitle(item),
+                    "location": self._get_location(item),
+                    "distance": self._get_distance(item),
+                }
+            )
+
+        return results
+
+
+
+
 
